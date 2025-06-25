@@ -15,6 +15,12 @@ const transport = new Experimental_StdioMCPTransport({
         "/Users/manish/Downloads/chota"
       ],
   });
+
+const transportContext7 = new Experimental_StdioMCPTransport({
+    command: "npx",
+    args: ["-y", "@upstash/context7-mcp"],
+});
+
 let mcpClientFilesystem = await createMCPClient({
     transport,
 });
@@ -35,15 +41,22 @@ let mcpClientCoderunner = await createMCPClient({
 
 });
 
+// New client for context7 addition
+let mcpClientContext7 = await createMCPClient({
+    transport: transportContext7,
+});
+
 
 
 const mcpToolsCoderunner = await mcpClientCoderunner.tools();
-
 const mcpToolsFilesystem = await mcpClientFilesystem.tools();
+const mcpToolsContext7 = await mcpClientContext7.tools();
+
 
 const mcpTools = {
   ...mcpToolsCoderunner,
   ...mcpToolsFilesystem,
+  ...mcpToolsContext7, // Include context7 tools
 };
 
 export async function POST(req: Request) {
@@ -51,8 +64,9 @@ export async function POST(req: Request) {
 
   const result = streamText({
     // model: openai("gpt-4o"),
-    model: google("models/gemini-2.5-pro"),
+    model: google("models/gemini-2.0-flash"),
     messages,
+    maxSteps: 100,
     // forward system prompt and tools from the frontend
     toolCallStreaming: true,
     system,

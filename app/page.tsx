@@ -15,6 +15,8 @@ So, a scenario could be that we want to extract 10 seconds of a video inside a m
 \
 2. Once file is there we can use execute command tool to run any code, like ffmpeg etc (which is executed inside a cell in jupyter internally)\
 \
-3. If you are not sure of username, then you try the list allowed directories tool and you will the paths.");
+3. If you are not sure of username, then you try the list allowed directories tool and you will the paths. \
+\
+And Continue (send continue flas as true in last message) doing as much tool calls as possible to complete the task (all steps at once) without asking me for confirmation");
   return <Assistant />;
 }

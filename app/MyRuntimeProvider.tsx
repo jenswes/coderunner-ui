@@ -10,6 +10,10 @@ export function MyRuntimeProvider({
 }>) {
   const runtime = useChatRuntime({
     api: "/api/chat",
+    onFinish: (message) => {
+      console.log("Message finished:", message);
+
+    }
   });
 
   return (
