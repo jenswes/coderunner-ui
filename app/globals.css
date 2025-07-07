@@ -1,5 +1,12 @@
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Your custom imports can follow after these Tailwind directives */
 @import "tw-animate-css";
+
+/* @import "tw-animate-css"; */
 
 @custom-variant dark (&:is(.dark *));
 

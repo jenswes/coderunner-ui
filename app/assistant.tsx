@@ -1,18 +1,20 @@
 "use client";
 
-import { AssistantRuntimeProvider, useAssistantInstructions } from "@assistant-ui/react";
-import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
+import { useChatContext } from "@/components/chat-context";
 import { Thread } from "@/components/assistant-ui/thread";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SelectModel } from "@/components/model-select";
+import { ApiKeyInput } from "@/components/api-key-input";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { ModelOptions } from "@/types";
 
 export const Assistant = () => {
 //   const runtime = useChatRuntime({
 //     api: "/api/chat",
 //   });
-
+     const { model, setModel, setApiKey } = useChatContext();
   return (
     // <AssistantRuntimeProvider runtime={runtime}>
       <SidebarProvider>
@@ -36,6 +38,8 @@ export const Assistant = () => {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
+            <SelectModel onValueChange={setModel} value={model as ModelOptions} />
+          <ApiKeyInput onApiKeyChange={setApiKey} />
           </header>
           <Thread />
         </SidebarInset>
