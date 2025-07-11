@@ -12,7 +12,7 @@ import { Experimental_StdioMCPTransport } from 'ai/mcp-stdio';
 const transport = new Experimental_StdioMCPTransport({
     command: "/Users/manish/go/bin/mcp-filesystem-server",
     args: [
-        "/Users/manish/Desktop/assets",
+        "/Users/manish/Work/ctest/chatui/dexter/public/assets",
         "/Users/manish/Downloads/chota"
       ],
   });

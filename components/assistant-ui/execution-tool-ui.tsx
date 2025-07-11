@@ -34,7 +34,11 @@ export const CodeExecutionToolUI = makeAssistantToolUI<CodeExecutionArgs, CodeEx
     if (status.type === "complete" && result) {
       const inputCode = args.command;
       const outputText = result.content?.map(c => c.text).join("") || "";
-
+      // extract any /Users/...mp4|webm|ogg path
+      const pathRegex = /\/Users\/\S+\.(mp4|webm|ogg)/i;
+      const match = outputText.match(pathRegex);
+      const videoPath = match?.[0];
+      const hasVideo = Boolean(videoPath);
       return (
         <div className="space-y-6">
           <div>
@@ -50,13 +54,22 @@ export const CodeExecutionToolUI = makeAssistantToolUI<CodeExecutionArgs, CodeEx
           </div>
           <div>
             <div className="font-bold mb-1 text-purple-700">🖥️ Output:</div>
-            <pre className="
-              bg-gray-900 text-green-400
-              p-3 rounded-lg font-mono text-sm
-              overflow-auto drop-shadow
-            ">
-              {outputText}
-            </pre>
+            {hasVideo ? (
+              <>
+                <pre className="bg-gray-900 text-green-400 p-3 rounded-lg font-mono text-sm overflow-auto drop-shadow">
+                  {outputText}
+                </pre>
+                <video
+                  src={videoPath}
+                  controls
+                  className="w-full rounded-lg border bg-black"
+                />
+              </>
+            ) : (
+              <pre className="bg-gray-900 text-green-400 p-3 rounded-lg font-mono text-sm overflow-auto drop-shadow">
+                {outputText}
+              </pre>
+            )}
           </div>
         </div>
       );

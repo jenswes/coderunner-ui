@@ -119,14 +119,58 @@ const defaultComponents = memoizeMarkdownComponents({
   pre: ({ className, ...props }) => (
     <pre className={cn("overflow-x-auto rounded-b-lg bg-black p-4 text-white", className)} {...props} />
   ),
-  code: function Code({ className, ...props }) {
+   code: function Code({ className, ...props }) {
     const isCodeBlock = useIsMarkdownCodeBlock();
+    const text = String(props.children);
+    const videoExts = [".mp4", ".webm", ".ogg", ".mov"];
+
+    const isVideo =
+      !isCodeBlock &&
+      text.startsWith("/Users") &&
+      videoExts.some((ext) => text.toLowerCase().endsWith(ext));
+
+    if (isVideo) {
+      // strip your local‐machine prefix and point to the public folder
+      // adjust the RegExp to match your exact local path structure
+      const publicPath = text.replace(
+        /^\/Users\/.*?\/assets/,
+        "/assets"
+    );
+
+      return (
+        <div>
+        <code
+        className={cn(
+          publicPath
+            ? "bg-green-500 text-white font-bold px-1 py-0.5 rounded"
+            : !isCodeBlock && "bg-muted rounded border font-semibold",
+          className
+        )}
+        {...props}
+      />
+        <video
+          src={publicPath}
+          controls
+          className="my-4 max-h-80 w-full rounded"
+        />
+        </div>
+      );
+    }
+
+    // fallback to your existing inline‐path styling
+    const isUserPath = !isCodeBlock && text.startsWith("/Users");
     return (
       <code
-        className={cn(!isCodeBlock && "bg-muted rounded border font-semibold", className)}
+        className={cn(
+          isUserPath
+            ? "bg-green-500 text-white font-bold px-1 py-0.5 rounded"
+            : !isCodeBlock && "bg-muted rounded border font-semibold",
+          className
+        )}
         {...props}
       />
     );
   },
+
   CodeHeader,
 });

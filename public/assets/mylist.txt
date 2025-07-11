@@ -1,0 +1,2 @@
+file '/app/uploads/first_5_secs.mov'
+file '/app/uploads/last_5_secs.mov'

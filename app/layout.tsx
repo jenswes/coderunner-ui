@@ -1,3 +1,4 @@
+
 import {CodeExecutionToolUI} from "../components/assistant-ui/execution-tool-ui";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -34,6 +35,7 @@ export default function RootLayout({
         <ChatProvider>
         <MyRuntimeProvider>
             <CodeExecutionToolUI ></CodeExecutionToolUI>
+
             {children}
 
         </MyRuntimeProvider>
