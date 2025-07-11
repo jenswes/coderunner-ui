@@ -1,4 +1,4 @@
-import {WeatherToolUI} from "../components/assistant-ui/weather-tool-ui";
+import {CodeExecutionToolUI} from "../components/assistant-ui/execution-tool-ui";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -33,7 +33,7 @@ export default function RootLayout({
       >
         <ChatProvider>
         <MyRuntimeProvider>
-            <WeatherToolUI ></WeatherToolUI>
+            <CodeExecutionToolUI ></CodeExecutionToolUI>
             {children}
 
         </MyRuntimeProvider>

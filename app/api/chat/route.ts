@@ -44,7 +44,7 @@ export const maxDuration = 30;
 
 let mcpClientCoderunner;
 
-if (process.env.NEXT_RUNTIME !== 'server') {
+if (false && process.env.NEXT_RUNTIME !== 'server') {
   // Placeholder configuration at build time
   mcpClientCoderunner = { tools: async () => ({}) };
 } else {
