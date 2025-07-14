@@ -14,7 +14,7 @@ export const Assistant = () => {
 //   const runtime = useChatRuntime({
 //     api: "/api/chat",
 //   });
-     const { model, setModel, setApiKey } = useChatContext();
+     const { model, setModel, apiKey, setApiKey } = useChatContext();
   return (
     // <AssistantRuntimeProvider runtime={runtime}>
       <SidebarProvider>
@@ -39,7 +39,9 @@ export const Assistant = () => {
               </BreadcrumbList>
             </Breadcrumb>
             <SelectModel onValueChange={setModel} value={model as ModelOptions} />
-          <ApiKeyInput onApiKeyChange={setApiKey} />
+
+    <ApiKeyInput initialValue={apiKey} onSave={setApiKey} />
+
           </header>
           <Thread />
         </SidebarInset>

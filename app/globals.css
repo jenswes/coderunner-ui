@@ -127,3 +127,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+@keyframes fade-in-out {
+  0%   { opacity: 0; transform: translateY(5px); }
+  10%  { opacity: 1; transform: translateY(0); }
+  90%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-5px); }
+}
+.saved-badge {
+  display: inline-block;
+  animation: fade-in-out 1.5s forwards;
+}

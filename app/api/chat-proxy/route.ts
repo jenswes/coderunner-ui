@@ -1,5 +1,14 @@
 export async function POST(req: Request) {
   const body = await req.json();
+
+  if (Array.isArray((body as any).messages)) {
+    (body as any).messages = (body as any).messages.filter((msg: any) => {
+      if (msg.role !== "assistant") return true;
+      const parts = Array.isArray(msg.content) ? msg.content : [];
+      // keep only if at least one part.text is non-empty
+      return parts.some((p: any) => typeof p.text === "string" && p.text.trim() !== "");
+    });
+  }
   const apiKey = req.headers.get("X-API-Key") || "";
   const model = new URL(req.url).searchParams.get("model") || "google_genai/gemini-2.5-flash";
 
