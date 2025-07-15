@@ -6,16 +6,19 @@ import { streamText } from "ai";
 import { experimental_createMCPClient as createMCPClient } from "ai";
 
 import { Experimental_StdioMCPTransport } from 'ai/mcp-stdio';
-
-
+import { join } from "path";
+import os from "os";
 
 const transport = new Experimental_StdioMCPTransport({
-    command: "/Users/manish/go/bin/mcp-filesystem-server",
-    args: [
-        "/Users/manish/Work/ctest/chatui/dexter/public/assets",
-        "/Users/manish/Downloads/chota"
-      ],
-  });
+  command: process.env.MCP_FILESYSTEM_CMD || "mcp-filesystem-server",
+  args: [
+    // directory for public assets
+    process.env.MCP_FS_ASSETS_DIR || join(process.cwd(), "public/assets"),
+    // workspace directory
+    process.env.MCP_FS_WORKSPACE_DIR || join(os.homedir(), "Documents"),
+  ],
+});
+
 
 const transportContext7 = new Experimental_StdioMCPTransport({
     command: "npx",

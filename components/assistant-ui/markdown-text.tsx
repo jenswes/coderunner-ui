@@ -138,11 +138,11 @@ const defaultComponents = memoizeMarkdownComponents({
     );
 
       return (
-        <div>
+        <>
         <code
         className={cn(
           publicPath
-            ? "bg-green-500 text-white font-bold px-1 py-0.5 rounded"
+            ? "bg-green-700 text-white font-bold px-1 py-0.5 rounded"
             : !isCodeBlock && "bg-muted rounded border font-semibold",
           className
         )}
@@ -153,7 +153,7 @@ const defaultComponents = memoizeMarkdownComponents({
           controls
           className="my-4 max-h-80 w-full rounded"
         />
-        </div>
+        </>
       );
     }
 

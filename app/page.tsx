@@ -10,7 +10,7 @@ For file access we have mapped /Users/<username>/Work/ctest/chatui/dexter/public
 \
 So, a scenario could be that we want to extract 10 seconds of a video inside a mac, then steps would look like: \
 \
-1. You would use filesystem to copy the video file from /Users/<username>/Downloads/chota (we have access to this folder in addition to tthe assets one) to the assets folder. and since its mapped to /app/uploads it will automatically can be seen/accessed from inside the container where we will execute the code.\
+1. You would use filesystem to copy the video file from any of allowed directories (we have access to these folder in addition to tthe assets one) to the assets folder. and since its mapped to /app/uploads it will automatically can be seen/accessed from inside the container where we will execute the code.\
 \
 \
 2. Once file is there we can use execute command tool to run any code, like ffmpeg etc (which is executed inside a cell in jupyter internally)\
