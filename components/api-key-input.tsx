@@ -5,12 +5,14 @@ type ApiKeyInputProps = {
   placeholder?: string;
   initialValue?: string;
   onSave: (apiKey: string) => void;
+  disabled?: boolean;
 };
 
 export const ApiKeyInputComponent = ({
   placeholder = "Enter your API Key",
   initialValue = "",
   onSave,
+  disabled = false,
 }: ApiKeyInputProps) => {
   const [draftKey, setDraftKey] = useState(initialValue);
 
@@ -35,10 +37,13 @@ export const ApiKeyInputComponent = ({
         onChange={(e) => setDraftKey(e.target.value)}
         placeholder={placeholder}
         type="password"
+        disabled={disabled}
       />
       <button
       onClick={handleSave}
-      className="px-3 py-1 bg-blue-600 text-white rounded transition"
+      disabled={disabled}
+      className={`px-3 py-1 rounded transition ${disabled ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 text-white"}`}
+
     >
       Save
     </button>

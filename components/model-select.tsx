@@ -9,8 +9,10 @@ import {
 } from "./ui/select";
 
 const modelOptionsAndLabels: Partial<Record<ModelOptions, string>> = {
+  "ollama/llama3.1:8b": "Llama 3.1 8B",
+  "ollama/qwen3": "Qwen 3",
   "anthropic/claude-sonnet-4-20250514": "Claude 4 Sonnet",
-  "openai/gpt-4.1-mini": "GPT 4.1 Mini",
+  "openai/gpt-4.1-mini": "GPT 4o",
   "google_genai/gemini-2.5-flash": "Gemini 2.5 Flash",
 };
 

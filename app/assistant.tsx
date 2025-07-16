@@ -15,6 +15,7 @@ export const Assistant = () => {
 //     api: "/api/chat",
 //   });
      const { model, setModel, apiKey, setApiKey } = useChatContext();
+     const isOllamaModel = model?.startsWith("ollama")
   return (
     // <AssistantRuntimeProvider runtime={runtime}>
       <SidebarProvider>
@@ -40,7 +41,7 @@ export const Assistant = () => {
             </Breadcrumb>
             <SelectModel onValueChange={setModel} value={model as ModelOptions} />
 
-    <ApiKeyInput initialValue={apiKey} onSave={setApiKey} />
+            <ApiKeyInput initialValue={apiKey} onSave={setApiKey} disabled={isOllamaModel}/>
 
           </header>
           <Thread />

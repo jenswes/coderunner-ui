@@ -1,8 +1,11 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOllama } from 'ollama-ai-provider';
+
+
 import { frontendTools } from "@assistant-ui/react-ai-sdk";
-import { streamText } from "ai";
+import { streamText, generateText } from "ai";
 import { experimental_createMCPClient as createMCPClient } from "ai";
 
 import { Experimental_StdioMCPTransport } from 'ai/mcp-stdio';
@@ -34,16 +37,6 @@ const mcpClientFilesystem = await createMCPClient({
 // export const runtime = "edge";
 export const maxDuration = 30;
 
-// const mcpClientCoderunner = await createMCPClient({
-//   // TODO adjust this to point to your MCP server URL
-//   transport: {
-//     type: "sse",
-//     url: "http://coderunner.local:8222/sse",
-
-//   },
-//   name: "coderunner"
-
-// });
 
 let mcpClientCoderunner;
 
@@ -87,6 +80,12 @@ const mcpTools = {
 // helper function to dynamically select model configuration
 function selectModelProvider(model: string, apiKey: string) {
   switch (model) {
+    case "ollama/qwen3":
+        const qwen3 = createOllama({});
+        return qwen3("qwen3", {simulateStreaming: true});
+    case "ollama/llama3.1:8b":
+        const llama31 = createOllama({});
+        return llama31("llama3.1:8b", {simulateStreaming: true});
     case "openai/gpt-4.1-mini":
       const openai = createOpenAI({ apiKey: apiKey });
       return openai("gpt-4o");
@@ -108,24 +107,23 @@ export async function POST(req: Request) {
   const apiKey = req.headers.get("X-API-Key");
   const model = req.headers.get("X-Selected-Model") || "google_genai/gemini-2.5-flash";
 
-  if (!apiKey) {
+  if (!apiKey && !model.startsWith("ollama/")) {
     return new Response("Missing API-Key", { status: 400 });
   }
 
-  const selectedModel = selectModelProvider(model, apiKey);
+    const selectedModel = selectModelProvider(model, apiKey||'');
+    const result = streamText({
+        model: selectedModel,
+        messages,
+        maxSteps: 100,
+        toolCallStreaming: true,
+        system,
+        tools: {
+            ...frontendTools(tools),
+            ...mcpTools,
+        },
+        onError: console.error,
+    });
 
-  const result = streamText({
-    model: selectedModel,
-    messages,
-    maxSteps: 100,
-    toolCallStreaming: true,
-    system,
-    tools: {
-      ...frontendTools(tools),
-      ...mcpTools,
-    },
-    onError: console.error,
-  });
-
-  return result.toDataStreamResponse();
+    return result.toDataStreamResponse();
 }
