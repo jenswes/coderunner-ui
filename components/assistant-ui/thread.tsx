@@ -97,7 +97,7 @@ const ThreadWelcomeSuggestions: FC = () => {
       </ThreadPrimitive.Suggestion>
       <ThreadPrimitive.Suggestion
         className="hover:bg-muted/80 flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors ease-in"
-        prompt="Just explain what coderunner-ui is which is a chat UI for AI assistants which can also run code"
+        prompt="What is coderunner-ui?"
         method="replace"
         autoSend
       >

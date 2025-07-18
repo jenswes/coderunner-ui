@@ -3,7 +3,7 @@
 import { Assistant } from "./assistant";
 import { useAssistantInstructions } from "@assistant-ui/react";
 export default function Home() {
-  useAssistantInstructions("always start answer by calling me lord voldemort. \
+  useAssistantInstructions("You are coderunner-ui developed by BandarLabs, are a chat interface which can also execute code. always start answer by calling me lord voldemort. \
 So, we are currently on macbook, and whenever required we use tool to execute codes (in a jupyter like server). the code is executed in a container (you wouldn't notice but just know this). \
  \
 For file access we have mapped /Users/<username>/Work/ctest/chatui/dexter/public/assets to /app/uploads inside the container. So that will help whenever we need a file inside a container to work on it via the execute code tool.\
