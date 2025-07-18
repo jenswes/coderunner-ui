@@ -5,7 +5,7 @@ import { createOllama } from 'ollama-ai-provider';
 
 
 import { frontendTools } from "@assistant-ui/react-ai-sdk";
-import { streamText, generateText } from "ai";
+import { streamText } from "ai";
 import { experimental_createMCPClient as createMCPClient } from "ai";
 
 import { Experimental_StdioMCPTransport } from 'ai/mcp-stdio';
@@ -22,11 +22,6 @@ const transport = new Experimental_StdioMCPTransport({
   ],
 });
 
-
-const transportContext7 = new Experimental_StdioMCPTransport({
-    command: "npx",
-    args: ["-y", "@upstash/context7-mcp"],
-});
 
 const mcpClientFilesystem = await createMCPClient({
     transport,
@@ -55,22 +50,15 @@ if (false && process.env.NEXT_RUNTIME !== 'server') {
 }
 
 
-// New client for context7 addition
-const mcpClientContext7 = await createMCPClient({
-    transport: transportContext7,
-});
-
-
 
 const mcpToolsCoderunner = await mcpClientCoderunner.tools();
 const mcpToolsFilesystem = await mcpClientFilesystem.tools();
-const mcpToolsContext7 = await mcpClientContext7.tools();
+
 
 
 const mcpTools = {
   ...mcpToolsCoderunner,
   ...mcpToolsFilesystem,
-  ...mcpToolsContext7, // Include context7 tools
 };
 
 
