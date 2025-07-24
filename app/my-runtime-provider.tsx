@@ -1,8 +1,9 @@
 'use client';
 import { useMemo } from "react";
-import { AssistantRuntimeProvider } from "@assistant-ui/react";
+import { AssistantRuntimeProvider, ChatModelAdapter } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { useChatContext } from "@/components/chat-context";
+
 
 export function MyRuntimeProvider({ children }: { children: React.ReactNode }) {
   const { model, apiKey } = useChatContext();

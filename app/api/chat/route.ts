@@ -6,11 +6,13 @@ import { createOllama } from 'ollama-ai-provider';
 
 import { frontendTools } from "@assistant-ui/react-ai-sdk";
 import { streamText } from "ai";
-import { experimental_createMCPClient as createMCPClient } from "ai";
+import { MCPTransport, experimental_createMCPClient as createMCPClient } from "ai";
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp';
 
 import { Experimental_StdioMCPTransport } from 'ai/mcp-stdio';
 import { join } from "path";
 import os from "os";
+
 
 const transport = new Experimental_StdioMCPTransport({
   command: process.env.MCP_FILESYSTEM_CMD || "mcp-filesystem-server",
@@ -35,18 +37,18 @@ export const maxDuration = 30;
 
 let mcpClientCoderunner;
 
+
+
 if (false && process.env.NEXT_RUNTIME !== 'server') {
   // Placeholder configuration at build time
   mcpClientCoderunner = { tools: async () => ({}) };
 } else {
-  // Runtime configuration
+
+const url = new URL('http://coderunner.local:8222/mcp');
   mcpClientCoderunner = await createMCPClient({
-    transport: {
-      type: "sse",
-      url: "http://coderunner.local:8222/sse",
-    },
-    name: "coderunner"
-  });
+  transport: new StreamableHTTPClientTransport(url, {
+  }),
+});
 }
 
 
