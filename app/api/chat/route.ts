@@ -13,6 +13,7 @@ import { Experimental_StdioMCPTransport } from 'ai/mcp-stdio';
 import { join } from "path";
 import os from "os";
 
+export const runtime = "nodejs";
 
 const transport = new Experimental_StdioMCPTransport({
   command: process.env.MCP_FILESYSTEM_CMD || "mcp-filesystem-server",
@@ -50,6 +51,7 @@ const url = new URL('http://coderunner.local:8222/mcp');
   }),
 });
 }
+
 
 
 
