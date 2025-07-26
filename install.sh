@@ -13,8 +13,12 @@ if [ -d "public/assets" ] && [ ! -L "public/assets" ]; then
   rm -rf public/assets
 fi
 
-echo "→ Creating symlink public/assets → $ASSETS_SRC"
-ln -s "$ASSETS_SRC" public/assets
+if [ -L public/assets ] && [ "$(readlink public/assets)" = "$ASSETS_SRC" ]; then
+  echo "→ public/assets already linked → $ASSETS_SRC"
+else
+  echo "→ Creating symlink public/assets → $ASSETS_SRC"
+  ln -s "$ASSETS_SRC" public/assets
+fi
 # 1) Ensure Go is installed, then install mcp-filesystem-server
 echo "→ Installing mcp-filesystem-server..."
 if ! command -v mcp-filesystem-server &>/dev/null; then
