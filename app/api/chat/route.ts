@@ -22,6 +22,8 @@ const transport = new Experimental_StdioMCPTransport({
     process.env.MCP_FS_ASSETS_DIR || join(process.cwd(), "public/assets"),
     // workspace directory
     process.env.MCP_FS_WORKSPACE_DIR || join(os.homedir(), "Documents"),
+
+    join(os.homedir(), ".coderunner/assets"),
   ],
 });
 
