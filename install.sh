@@ -6,17 +6,15 @@ echo "→ Ensuring coderunner assets directory…"
 ASSETS_SRC="$HOME/.coderunner/assets"
 mkdir -p "$ASSETS_SRC"
 
-echo "→ Ensuring public/assets symlink…"
-ASSETS_LINK="public/assets"
-mkdir -p "$(dirname "$ASSETS_LINK")"
-if [ ! -L "$ASSETS_LINK" ]; then
-  ln -s "$ASSETS_SRC" "$ASSETS_LINK"
-  echo "   • linked $ASSETS_LINK → $ASSETS_SRC"
-else
-  echo "   • $ASSETS_LINK already exists"
+# If public/assets exists as a real dir, move its contents into ASSETS_SRC
+if [ -d "public/assets" ] && [ ! -L "public/assets" ]; then
+  echo "→ Migrating existing public/assets → $ASSETS_SRC"
+  cp -R public/assets/. "$ASSETS_SRC"/
+  rm -rf public/assets
 fi
 
-
+echo "→ Creating symlink public/assets → $ASSETS_SRC"
+ln -s "$ASSETS_SRC" public/assets
 # 1) Ensure Go is installed, then install mcp-filesystem-server
 echo "→ Installing mcp-filesystem-server..."
 if ! command -v mcp-filesystem-server &>/dev/null; then
