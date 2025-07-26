@@ -17,17 +17,25 @@ fi
 # 2) Clone & install coderunner
 CODERUNNER_DIR="$HOME/coderunner"
 echo "→ Installing coderunner..."
+# ... existing code ...
+
 if [ ! -d "$CODERUNNER_DIR" ]; then
   git clone https://github.com/BandarLabs/coderunner.git "$CODERUNNER_DIR"
   cd "$CODERUNNER_DIR"
   chmod +x install.sh
   sudo ./install.sh
-  echo "   • coderunner dev server started"
+  echo "   • coderunner server started"
   cd - &>/dev/null
 else
-  echo "   • coderunner already cloned at $CODERUNNER_DIR"
+  echo "   • coderunner already cloned at $CODERUNNER_DIR → fetching updates"
+  cd "$CODERUNNER_DIR"
+  git fetch --all
+  git reset --hard origin/main    # or replace origin/main with your branch
+  chmod +x install.sh
+  sudo ./install.sh
+  echo "   • coderunner server updated"
+  cd - &>/dev/null
 fi
-
 # 3) Bootstrap your chat app
 echo "→ Installing chat app dependencies…"
 npm install
