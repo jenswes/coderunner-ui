@@ -9,10 +9,19 @@ import {
 } from "./ui/select";
 
 const modelOptionsAndLabels: Partial<Record<ModelOptions, string>> = {
+  "ollama/deepseek-r1:32b": "DeepSeek-R1 32B",
+  "ollama/deepseek-r1:8b": "DeepSeek-R1 8B",
   "ollama/llama3.1:8b": "Llama 3.1 8B",
   "ollama/qwen3": "Qwen 3",
-  "anthropic/claude-sonnet-4-20250514": "Claude 4 Sonnet",
-  "openai/gpt-4.1-mini": "GPT 4o",
+  "anthropic/claude-sonnet-4-20250514": "Claude Sonnet 4",
+  "anthropic/claude-3-7-sonnet-latest": "Claude 3.7 Sonnet Latest",
+  "anthropic/claude-3-5-haiku-latest": "Claude 3.5 Haiku Latest",
+  "anthropic/claude-opus-4-20250514": "Claude Opus 4",
+  "openai/gpt-4o": "GPT 4o",
+  "openai/gpt-4.1": "GPT 4.1",
+  "openai/gpt-4.1-mini": "GPT 4.1 Mini",
+  "o4-mini": "o4-mini",
+  "google_genai/gemini-2.5-pro": "Gemini 2.5 Pro",
   "google_genai/gemini-2.5-flash": "Gemini 2.5 Flash",
 };
 

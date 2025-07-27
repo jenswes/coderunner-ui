@@ -74,18 +74,48 @@ const mcpTools = {
 // helper function to dynamically select model configuration
 function selectModelProvider(model: string, apiKey: string) {
   switch (model) {
+    case "ollama/deepseek-r1:32b":
+        const deepseek32b = createOllama({});
+        return deepseek32b("deepseek-r1:32b", {simulateStreaming: true});
+    case "ollama/deepseek-r1:8b":
+        const deepseek8b = createOllama({});
+        return deepseek8b("deepseek-r1:8b", {simulateStreaming: true});
     case "ollama/qwen3":
         const qwen3 = createOllama({});
         return qwen3("qwen3", {simulateStreaming: true});
     case "ollama/llama3.1:8b":
         const llama31 = createOllama({});
         return llama31("llama3.1:8b", {simulateStreaming: true});
-    case "openai/gpt-4.1-mini":
+    case "openai/gpt-4o":
       const openai = createOpenAI({ apiKey: apiKey });
       return openai("gpt-4o");
-    case "google_genai/gemini-2.5-flash":
+    case "openai/gpt-4.1":
+      const openai41 = createOpenAI({ apiKey: apiKey });
+      return openai41("gpt-4.1");
+    case "openai/gpt-4.1-mini":
+      const openai41mini = createOpenAI({ apiKey: apiKey });
+      return openai41mini("gpt-4.1-mini");
+    case "openai/gpt-4o-mini":
+      const openai4omini = createOpenAI({ apiKey: apiKey });
+      return openai4omini("gpt-4o-mini");
+    case "o4-mini":
+      const o4mini = createOpenAI({ apiKey: apiKey });
+      return o4mini("o4-mini");
+    case "anthropic/claude-3-7-sonnet-latest":
+      const claude37sonnet = createAnthropic({ apiKey: apiKey });
+      return claude37sonnet("claude-3-7-sonnet-latest");
+    case "anthropic/claude-3-5-haiku-latest":
+      const claude35haiku = createAnthropic({ apiKey: apiKey });
+      return claude35haiku("claude-3-5-haiku-latest");
+    case "anthropic/claude-opus-4-20250514":
+      const claudeopus4 = createAnthropic({ apiKey: apiKey });
+      return claudeopus4("claude-opus-4-20250514");
+    case "google_genai/gemini-2.5-pro":
       const google = createGoogleGenerativeAI({ apiKey: apiKey });
-      return google("models/gemini-2.5-flash");
+      return google("models/gemini-2.5-pro");
+    case "google_genai/gemini-2.5-flash":
+      const googleFlash = createGoogleGenerativeAI({ apiKey: apiKey });
+      return googleFlash("models/gemini-2.5-flash");
     case "anthropic/claude-sonnet-4-20250514":
         const anthropic = createAnthropic({ apiKey: apiKey });
         return anthropic("claude-sonnet-4-20250514");

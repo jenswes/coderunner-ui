@@ -16,7 +16,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 
 export const ChatProvider = ({ children }) => {
-  const [model, _setModel] = useState<ModelOptions>("openai/gpt-4.1-mini");
+  const [model, _setModel] = useState<ModelOptions>("openai/gpt-4o");
   const [apiKey, _setApiKey] = useState<string>("");
 
   // on mount: load saved settings
