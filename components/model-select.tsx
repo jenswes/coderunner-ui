@@ -9,9 +9,8 @@ import {
 } from "./ui/select";
 
 const modelOptionsAndLabels: Partial<Record<ModelOptions, string>> = {
-  "ollama/deepseek-r1:32b": "DeepSeek-R1 32B",
-  "ollama/deepseek-r1:8b": "DeepSeek-R1 8B",
   "ollama/llama3.1:8b": "Llama 3.1 8B",
+  "ollama/llama4:latest": "Llama 4 Latest",
   "ollama/qwen3": "Qwen 3",
   "anthropic/claude-sonnet-4-20250514": "Claude Sonnet 4",
   "anthropic/claude-3-7-sonnet-latest": "Claude 3.7 Sonnet Latest",

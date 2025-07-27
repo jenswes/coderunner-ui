@@ -86,6 +86,9 @@ function selectModelProvider(model: string, apiKey: string) {
     case "ollama/llama3.1:8b":
         const llama31 = createOllama({});
         return llama31("llama3.1:8b", {simulateStreaming: true});
+    case "ollama/llama4:latest":
+        const llama4 = createOllama({});
+        return llama4("llama4:latest", {simulateStreaming: true});
     case "openai/gpt-4o":
       const openai = createOpenAI({ apiKey: apiKey });
       return openai("gpt-4o");
