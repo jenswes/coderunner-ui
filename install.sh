@@ -25,6 +25,55 @@ log_debug() {
     echo -e "${BLUE}🔍${NC} $1"
 }
 
+# Function to forcefully reset container system
+force_reset_container_system() {
+    log_warn "Attempting forceful container system reset..."
+    
+    # Kill any stuck container processes
+    log_debug "Killing any stuck container processes..."
+    sudo pkill -f "container" 2>/dev/null || true
+    
+    # Wait for processes to die
+    sleep 3
+    
+    # Try to unload and reload launchd services
+    log_debug "Reloading container system services..."
+    launchctl unload /System/Library/LaunchDaemons/com.apple.containermanagerd.plist 2>/dev/null || true
+    launchctl unload /System/Library/LaunchAgents/com.apple.containermanagerd.plist 2>/dev/null || true
+    
+    sleep 2
+    
+    launchctl load /System/Library/LaunchDaemons/com.apple.containermanagerd.plist 2>/dev/null || true
+    launchctl load /System/Library/LaunchAgents/com.apple.containermanagerd.plist 2>/dev/null || true
+    
+    sleep 5
+    
+    # Try starting the container system again
+    if sudo container system start 2>/dev/null; then
+        sleep 5
+        if container system status 2>&1 | grep -q "apiserver is running"; then
+            log_info "Container system reset successful"
+            return 0
+        fi
+    fi
+    
+    log_error "Forceful reset failed"
+    
+    # Show manual recovery instructions
+    echo
+    log_error "Container system appears to be in a broken state."
+    log_info "Manual recovery steps:"
+    echo "  1. Restart your Mac to fully reset the container system"
+    echo "  2. Or try running these commands manually:"
+    echo "     sudo launchctl unload /System/Library/LaunchDaemons/com.apple.containermanagerd.plist"
+    echo "     sudo launchctl load /System/Library/LaunchDaemons/com.apple.containermanagerd.plist"
+    echo "     sudo container system start"
+    echo "  3. Check system logs: sudo log show --predicate 'subsystem == \"com.apple.container\"' --last 5m"
+    echo
+    
+    return 1
+}
+
 # Function to check and start container system service
 ensure_container_system() {
     log_info "Checking container system status..."
@@ -60,19 +109,21 @@ ensure_container_system() {
         
         # Wait a bit for the system to be ready
         log_debug "Waiting for container system to be ready..."
-        sleep 3
+        sleep 5
         
         # Verify it's actually running
         if container system status 2>&1 | grep -q "apiserver is running"; then
             log_info "Container system verified as running"
             return 0
         else
-            log_error "Container system failed to start properly"
-            return 1
+            log_warn "Container system may not be fully ready, trying forceful reset..."
+            force_reset_container_system
+            return $?
         fi
     else
-        log_error "Failed to start container system"
-        return 1
+        log_warn "Normal start failed, trying forceful reset..."
+        force_reset_container_system
+        return $?
     fi
 }
 
