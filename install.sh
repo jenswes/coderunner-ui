@@ -264,7 +264,8 @@ install_coderunner_robustly() {
     
     # 5. Pull the image with retry
     log_info "Pulling latest instavm/coderunner image..."
-    if ! run_container_command_with_retry "Pull coderunner image" container image pull instavm/coderunner; then
+    log_debug "This may take several minutes for large images..."
+    if ! run_container_command_with_retry "Pull coderunner image" timeout 600 container image pull instavm/coderunner; then
         log_error "Failed to pull coderunner image"
         return 1
     fi
