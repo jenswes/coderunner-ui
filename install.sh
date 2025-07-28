@@ -107,19 +107,21 @@ ensure_container_system() {
     if sudo container system start; then
         log_info "Container system started successfully"
         
-        # Wait a bit for the system to be ready
+        # Wait for the system to be ready by polling its status
         log_debug "Waiting for container system to be ready..."
-        sleep 5
-        
-        # Verify it's actually running
-        if container system status 2>&1 | grep -q "apiserver is running"; then
-            log_info "Container system verified as running"
-            return 0
-        else
-            log_warn "Container system may not be fully ready, trying forceful reset..."
-            force_reset_container_system
-            return $?
-        fi
+        local wait_seconds=0
+        local max_wait=30
+        while ! container system status 2>&1 | grep -q "apiserver is running"; do
+            if [ "$wait_seconds" -ge "$max_wait" ]; then
+                log_warn "Container system failed to start properly (timed out after ${max_wait}s), trying forceful reset..."
+                force_reset_container_system
+                return $?
+            fi
+            sleep 2
+            wait_seconds=$((wait_seconds + 2))
+        done
+        log_info "Container system verified as running"
+        return 0
     else
         log_warn "Normal start failed, trying forceful reset..."
         force_reset_container_system
@@ -136,7 +138,7 @@ cleanup_existing_container() {
     # List containers to see if our target exists
     local container_list
     if container_list=$(container list 2>/dev/null); then
-        if echo "$container_list" | grep -q "$container_name"; then
+        if echo "$container_list" | grep -wq "$container_name"; then
             log_warn "Found existing '$container_name' container, cleaning up..."
             
             # Try to stop it first
@@ -163,8 +165,9 @@ cleanup_existing_container() {
 run_container_command_with_retry() {
     local max_attempts=3
     local attempt=1
-    local cmd="$1"
-    local description="${2:-$cmd}"
+    local description="$1"
+    shift
+    local -a cmd_parts=("$@")
     
     while [ $attempt -le $max_attempts ]; do
         log_debug "Attempt $attempt/$max_attempts: $description"
@@ -173,7 +176,7 @@ run_container_command_with_retry() {
         local output
         local exit_code=0
         
-        if output=$(eval "$cmd" 2>&1); then
+        if output=$("${cmd_parts[@]}" 2>&1); then
             echo "$output"
             return 0
         else
@@ -221,9 +224,9 @@ install_coderunner_robustly() {
     
     # 2. Setup DNS domain (handle "already exists" gracefully)
     log_info "Setting up local network domain..."
-    if ! run_container_command_with_retry "sudo container system dns create local" "Create local DNS domain"; then
+    if ! run_container_command_with_retry "Create local DNS domain" sudo container system dns create local; then
         # This might fail if domain already exists, check if it actually exists
-        if container system dns list 2>/dev/null | grep -q "local"; then
+        if container system dns list 2>/dev/null | grep -wq "local"; then
             log_info "Local DNS domain already exists, continuing..."
         else
             log_error "Failed to create local DNS domain"
@@ -232,7 +235,7 @@ install_coderunner_robustly() {
     fi
     
     # 3. Set default DNS domain
-    if ! run_container_command_with_retry "container system dns default set local" "Set default DNS domain"; then
+    if ! run_container_command_with_retry "Set default DNS domain" container system dns default set local; then
         log_error "Failed to set default DNS domain"
         return 1
     fi
@@ -245,7 +248,7 @@ install_coderunner_robustly() {
     
     # 5. Pull the image with retry
     log_info "Pulling latest instavm/coderunner image..."
-    if ! run_container_command_with_retry "container image pull instavm/coderunner" "Pull coderunner image"; then
+    if ! run_container_command_with_retry "Pull coderunner image" container image pull instavm/coderunner; then
         log_error "Failed to pull coderunner image"
         return 1
     fi
@@ -260,9 +263,8 @@ install_coderunner_robustly() {
     
     # 8. Run the container with retry logic
     log_info "Starting coderunner container..."
-    local run_cmd="container run --volume \"$ASSETS_SRC:/app/uploads\" --name coderunner --detach --rm --cpus 8 --memory 4g instavm/coderunner"
     
-    if ! run_container_command_with_retry "$run_cmd" "Start coderunner container"; then
+    if ! run_container_command_with_retry "Start coderunner container" container run --volume "$ASSETS_SRC:/app/uploads" --name coderunner --detach --rm --cpus 8 --memory 4g instavm/coderunner; then
         log_error "Failed to start coderunner container"
         return 1
     fi
@@ -271,7 +273,7 @@ install_coderunner_robustly() {
     log_debug "Verifying coderunner container is running..."
     sleep 2
     
-    if container list 2>/dev/null | grep -q "coderunner"; then
+    if container list 2>/dev/null | grep -wq "coderunner"; then
         log_info "✅ Coderunner container is running successfully"
     else
         log_warn "Coderunner container may not be running properly"
