@@ -62,13 +62,29 @@ force_reset_container_system() {
     # Show manual recovery instructions
     echo
     log_error "Container system appears to be in a broken state."
-    log_info "Manual recovery steps:"
+    log_info "Attempting system daemon reload (will require password)..."
+    
+    # Try the manual recovery steps automatically
+    if sudo launchctl unload /System/Library/LaunchDaemons/com.apple.containermanagerd.plist 2>/dev/null; then
+        sleep 2
+        if sudo launchctl load /System/Library/LaunchDaemons/com.apple.containermanagerd.plist 2>/dev/null; then
+            sleep 3
+            if sudo container system start 2>/dev/null; then
+                sleep 5
+                if container system status 2>&1 | grep -q "apiserver is running"; then
+                    log_info "System daemon reload successful"
+                    return 0
+                fi
+            fi
+        fi
+    fi
+    
+    log_error "Automatic recovery failed. Manual steps:"
     echo "  1. Restart your Mac to fully reset the container system"
-    echo "  2. Or try running these commands manually:"
-    echo "     sudo launchctl unload /System/Library/LaunchDaemons/com.apple.containermanagerd.plist"
-    echo "     sudo launchctl load /System/Library/LaunchDaemons/com.apple.containermanagerd.plist"
-    echo "     sudo container system start"
-    echo "  3. Check system logs: sudo log show --predicate 'subsystem == \"com.apple.container\"' --last 5m"
+    echo "  2. Or run: sudo launchctl unload /System/Library/LaunchDaemons/com.apple.containermanagerd.plist"
+    echo "            sudo launchctl load /System/Library/LaunchDaemons/com.apple.containermanagerd.plist"
+    echo "            sudo container system start"
+    echo "  3. Check logs: sudo log show --predicate 'subsystem == \"com.apple.container\"' --last 5m"
     echo
     
     return 1
