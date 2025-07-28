@@ -48,8 +48,8 @@ force_reset_container_system() {
     
     sleep 5
     
-    # Try starting the container system again
-    if sudo container system start 2>/dev/null; then
+    # Try starting the container system again (try without sudo first)
+    if container system start 2>/dev/null || sudo container system start 2>/dev/null; then
         sleep 5
         if container system status 2>&1 | grep -q "apiserver is running"; then
             log_info "Container system reset successful"
@@ -69,7 +69,7 @@ force_reset_container_system() {
         sleep 2
         if sudo launchctl load /System/Library/LaunchDaemons/com.apple.containermanagerd.plist 2>/dev/null; then
             sleep 3
-            if sudo container system start 2>/dev/null; then
+            if container system start 2>/dev/null || sudo container system start 2>/dev/null; then
                 sleep 5
                 if container system status 2>&1 | grep -q "apiserver is running"; then
                     log_info "System daemon reload successful"
@@ -113,14 +113,14 @@ ensure_container_system() {
     
     # Stop any stale processes first
     log_debug "Stopping any existing container processes..."
-    sudo container system stop 2>/dev/null || true
+    container system stop 2>/dev/null || sudo container system stop 2>/dev/null || true
     
     # Small delay to ensure clean shutdown
     sleep 2
     
-    # Start the container system
+    # Start the container system (try without sudo first)
     log_info "Starting container system service..."
-    if sudo container system start; then
+    if container system start 2>/dev/null || sudo container system start; then
         log_info "Container system started successfully"
         
         # Wait for the system to be ready by polling its status
