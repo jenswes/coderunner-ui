@@ -12,6 +12,7 @@ const modelOptionsAndLabels: Partial<Record<ModelOptions, string>> = {
   "ollama/llama3.1:8b": "Llama 3.1 8B",
   "ollama/llama4:latest": "Llama 4 Latest",
   "ollama/qwen3": "Qwen 3",
+  "ollama/qwen3:32b": "Qwen 3 32B",
   "anthropic/claude-sonnet-4-20250514": "Claude Sonnet 4",
   "anthropic/claude-3-7-sonnet-latest": "Claude 3.7 Sonnet Latest",
   "anthropic/claude-3-5-haiku-latest": "Claude 3.5 Haiku Latest",

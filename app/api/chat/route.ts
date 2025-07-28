@@ -83,6 +83,12 @@ function selectModelProvider(model: string, apiKey: string) {
     case "ollama/qwen3":
         const qwen3 = createOllama({});
         return qwen3("qwen3", {simulateStreaming: true});
+    case "ollama/qwen3:30b":
+        const qwen330b = createOllama({});
+        return qwen330b("qwen3:30b", {simulateStreaming: true});
+    case "ollama/qwen3:32b":
+        const qwen332b = createOllama({});
+        return qwen332b("qwen3:32b", {simulateStreaming: true});
     case "ollama/llama3.1:8b":
         const llama31 = createOllama({});
         return llama31("llama3.1:8b", {simulateStreaming: true});
