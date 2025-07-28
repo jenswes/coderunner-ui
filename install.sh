@@ -157,20 +157,12 @@ cleanup_existing_container() {
         if echo "$container_list" | grep -wq "$container_name"; then
             log_warn "Found existing '$container_name' container, cleaning up..."
             
-            # Try to stop it first (with fallback to kill if it hangs)
-            log_debug "Stopping existing '$container_name' container..."
-            if container stop "$container_name" 2>/dev/null; then
-                log_info "Stopped existing '$container_name' container"
-                sleep 1
-            else
-                log_debug "Stop failed, trying to kill container..."
-                if container kill "$container_name" 2>/dev/null; then
-                    log_info "Killed existing '$container_name' container"
-                    sleep 1
-                fi
-            fi
+            # Use aggressive cleanup approach
+            log_debug "Forcefully stopping container processes..."
+            sudo pkill -f container 2>/dev/null || true
+            sleep 2
             
-            # Try to remove it
+            # Now remove the container
             if container rm "$container_name" 2>/dev/null; then
                 log_info "Removed existing '$container_name' container"
             else
