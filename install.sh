@@ -157,13 +157,12 @@ cleanup_existing_container() {
         if echo "$container_list" | grep -wq "$container_name"; then
             log_warn "Found existing '$container_name' container, cleaning up..."
 
-            # Try to stop it first
-            if container stop "$container_name" 2>/dev/null; then
-                log_info "Stopped existing '$container_name' container"
-                sleep 1
-            fi
+            # Use aggressive cleanup approach
+            log_debug "Forcefully stopping container processes..."
+            sudo pkill -f container 2>/dev/null || true
+            sleep 2
 
-            # Try to remove it
+            # Now remove the container
             if container rm "$container_name" 2>/dev/null; then
                 log_info "Removed existing '$container_name' container"
             else
@@ -192,7 +191,45 @@ run_container_command_with_retry() {
         local output
         local exit_code=0
 
-        if output=$("${cmd_parts[@]}" 2>&1); then
+        # For image pull commands, add timeout using background process
+        if [[ "$description" == *"Pull"* ]] && [[ "${cmd_parts[*]}" == *"image pull"* ]]; then
+            # Run command in background with timeout
+            local temp_output="/tmp/container_output_$$"
+            "${cmd_parts[@]}" > "$temp_output" 2>&1 &
+            local cmd_pid=$!
+
+            # Wait up to 10 minutes (600 seconds)
+            local wait_time=0
+            local max_wait=600
+            while kill -0 "$cmd_pid" 2>/dev/null && [ $wait_time -lt $max_wait ]; do
+                sleep 5
+                wait_time=$((wait_time + 5))
+                if [ $((wait_time % 60)) -eq 0 ]; then
+                    log_debug "Still pulling image... ${wait_time}s elapsed"
+                fi
+            done
+
+            if kill -0 "$cmd_pid" 2>/dev/null; then
+                log_warn "Image pull timed out after ${max_wait}s, killing process..."
+                kill -9 "$cmd_pid" 2>/dev/null
+                wait "$cmd_pid" 2>/dev/null
+                exit_code=124  # timeout exit code
+                output="Command timed out after ${max_wait} seconds"
+            else
+                wait "$cmd_pid"
+                exit_code=$?
+                output=$(cat "$temp_output")
+            fi
+            rm -f "$temp_output"
+        else
+            # Normal command execution
+            if output=$("${cmd_parts[@]}" 2>&1); then
+                echo "$output"
+                return 0
+            fi
+        fi
+
+        if [ $exit_code -eq 0 ]; then
             echo "$output"
             return 0
         else
