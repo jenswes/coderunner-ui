@@ -90,6 +90,9 @@ function selectModelProvider(model: string, apiKey: string) {
     case "ollama/llama3.1:8b":
         const llama31 = createOllama({});
         return llama31("llama3.1:8b", {simulateStreaming: true});
+    case "orieg/gemma3-tools:4b":
+        const gemma3 = createOllama({});
+        return gemma3("orieg/gemma3-tools:4b", {simulateStreaming: true}); // streaming is not supported for this model
     case "ollama/llama4:latest":
         const llama4 = createOllama({});
         return llama4("llama4:latest", {simulateStreaming: true});

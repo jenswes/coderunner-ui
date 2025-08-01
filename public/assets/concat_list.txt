@@ -1,2 +1,0 @@
-file 'first_3_sec.mov'
-file 'last_2_sec.mov'

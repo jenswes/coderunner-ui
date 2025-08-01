@@ -6,6 +6,7 @@ export type ModelOptions =
   | "ollama/qwen3:30b"
   | "ollama/qwen3:32b"
   | "ollama/llama3.1:8b"
+  | "orieg/gemma3-tools:4b"
   | "ollama/llama4:latest"
   | "openai/gpt-4o"
   | "openai/gpt-4.1"

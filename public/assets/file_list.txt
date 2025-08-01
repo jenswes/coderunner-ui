@@ -1,2 +1,0 @@
-file 'demosand1_first_4.mov'
-file 'demosand1_last_4.mov'
