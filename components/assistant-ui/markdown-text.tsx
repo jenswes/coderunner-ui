@@ -163,7 +163,7 @@ const defaultComponents = memoizeMarkdownComponents({
       <code
         className={cn(
           isUserPath
-            ? "bg-green-500 text-white font-bold px-1 py-0.5 rounded"
+            ? "bg-green-700 text-white font-bold px-1 py-0.5 rounded"
             : !isCodeBlock && "bg-muted rounded border font-semibold",
           className
         )}
