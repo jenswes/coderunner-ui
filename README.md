@@ -1,29 +1,60 @@
-This is the [assistant-ui](https://github.com/Yonom/assistant-ui) starter project.
+# coderunner-ui
 
-## Getting Started
+**coderunner-ui** is a local‑first AI workspace that lets you:
+- Chat with local or remote LLMs
+- Run generated code **inside a fully isolated Apple Container VM**
+- Browse the web and automate tasks via a **built‑in headless browser** (Playwright)
+All without sending your data to the cloud.
 
-Install dependencies:
+> Privacy by design. No remote code execution. Your machine, your data.
 
+---
+
+## 🚀 Getting Started
+
+### 1. Install dependencies
 ```bash
-npm run setup
+bash ./install.sh
 ```
 
-Then, run the development server:
-
+### 2. Start the app
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔑 Configure LLM API Keys
+If you want to use OpenAI, Gemini, or Anthropic models, enter your API key in the UI when prompted.
+*Keys are stored locally in your browser.*
 
-## Pre-requisite For Local Models
+---
 
-`ollama pull llama3.1:8b`
+## 🖥 Use Local Models with Ollama
+Install and pull a model:
+```bash
+ollama pull llama3.1:8b
+```
+Select it from the model dropdown in the UI.
+
+---
+
+## 📦 How It Works
+- **LLMs**: Local or remote
+- **Code Execution**: Runs entirely inside an **Apple Container** VM via [`coderunner`](https://github.com/instavm/coderunner)
+- **Web Automation**: Always‑available headless browser (Playwright) to fetch pages, scrape data, or run automated research tasks
+- **File Safety**: Shared files live in `~/.coderunner/assets`, keeping host system isolated
+
+---
+
+## 📝 Notes
+- Requires macOS on Apple Silicon.
+- Some websites may block automated browsers.
+
+---
+
+## 🔗 Resources
+- [coderunner-ui repo](https://github.com/instavm/coderunner-ui)
+- [coderunner runtime](https://github.com/instavm/coderunner)
+- [Apple/container](https://github.com/apple/container)
