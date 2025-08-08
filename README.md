@@ -55,6 +55,5 @@ Select it from the model dropdown in the UI.
 ---
 
 ## 🔗 Resources
-- [coderunner-ui repo](https://github.com/instavm/coderunner-ui)
 - [coderunner runtime](https://github.com/instavm/coderunner)
 - [Apple/container](https://github.com/apple/container)
