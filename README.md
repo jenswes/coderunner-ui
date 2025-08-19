@@ -1,5 +1,7 @@
 # coderunner-ui
 
+<img src="videoeditcoderunner.jpeg" alt="Video Edit Code Runner" width="200">
+
 **coderunner-ui** is a local‑first AI workspace that lets you:
 - Chat with local or remote LLMs
 - Run generated code **inside a fully isolated Apple Container VM**
