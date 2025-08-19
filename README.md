@@ -1,6 +1,6 @@
 # coderunner-ui
 
-<img src="videoeditcoderunner.jpeg" alt="Video Edit Code Runner" width="200">
+<img src="videoeditcoderunner.jpeg" alt="Video Edit Code Runner" width="500">
 
 **coderunner-ui** is a local‑first AI workspace that lets you:
 - Chat with local or remote LLMs
