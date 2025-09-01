@@ -1,65 +1,84 @@
-import { Agent, setGlobalDispatcher } from 'undici'
+// app/api/chat-proxy/route.ts
+import { Agent, setGlobalDispatcher } from "undici";
+import { cookies } from "next/headers";
 
-// disable the 5-minute body timeout entirely
-setGlobalDispatcher(new Agent({ bodyTimeout: 0 }))
+// disable the 5-minute body timeout entirely (long tool runs / streaming)
+setGlobalDispatcher(new Agent({ bodyTimeout: 0 }));
 
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const body = await req.json();
 
+  // sanitize: drop assistant messages that only contain empty text parts
   if (Array.isArray((body as any).messages)) {
     (body as any).messages = (body as any).messages.filter((msg: any) => {
       if (msg.role !== "assistant") return true;
       const parts = Array.isArray(msg.content) ? msg.content : [];
-      // keep if it's a tool_call or has non-empty text
-    return parts.some((p: any) =>
-      p.type === "tool-call" ||
-      (typeof p.text === "string" && p.text.trim() !== "")
-    );
+      return parts.some(
+        (p: any) =>
+          p.type === "tool-call" ||
+          (typeof p.text === "string" && p.text.trim() !== "")
+      );
     });
   }
-  const apiKey = req.headers.get("X-API-Key") || "";
-  const model = new URL(req.url).searchParams.get("model") || "google_genai/gemini-2.5-flash";
+
+  // ---- model resolution (Cookie > query > env > LM Studio default) ----
+  const url = new URL(req.url);
+  const modelFromQuery = url.searchParams.get("model") || "";
+
+  const cookieStore = await cookies();
+  const cookieModel = cookieStore.get("selectedModel")?.value || "";
+
+  const envDefault = process.env.DEFAULT_SELECTED_MODEL || "";
+
+  // Prefer the model picked in the UI (cookie) over any query default
+  const model =
+    cookieModel ||
+    modelFromQuery ||
+    envDefault ||
+    "lmstudio/mistralai/mistral-small-3.2";
+
+  // ---- api key resolution (header > provider env > none) ----
+  const incomingKey = req.headers.get("X-API-Key") || "";
+  let apiKey = incomingKey;
+  if (!apiKey) {
+    if (model.startsWith("openai/")) {
+      apiKey = process.env.OPENAI_API_KEY || "";
+    } else if (model.startsWith("anthropic/")) {
+      apiKey = process.env.ANTHROPIC_API_KEY || "";
+    } else if (model.startsWith("google_genai/")) {
+      // try common env names for Google GenAI
+      apiKey =
+        process.env.GOOGLE_GENAI_API_KEY ||
+        process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+        process.env.GOOGLE_API_KEY ||
+        "";
+    }
+    // ollama/* and lmstudio/* do not require an API key
+  }
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  console.log("body", body);
-  console.log("system:", body.system);
-body.messages.forEach((msg, i) => {
-  console.log(`messages[${i}].role:`, msg.role);
-  console.log(`messages[${i}].content:`, msg.content);
-});
-console.log(JSON.stringify(body, null, 2));
 
-function dump(obj: any, prefix = '') {
-  if (Array.isArray(obj)) {
-    obj.forEach((v, i) => dump(v, `${prefix}[${i}]`));
-  } else if (obj !== null && typeof obj === 'object') {
-    for (const [k, v] of Object.entries(obj)) {
-      dump(v, prefix ? `${prefix}.${k}` : k);
-    }
-  } else {
-    console.log(prefix + ':', obj);
-  }
-}
-
-// use it on the whole body or just messages
-dump(body);
+  // optional debug (quiet by default)
+  // console.log("[proxy] model:", model, "hasKey?", Boolean(apiKey));
 
   const response = await fetch(`${baseUrl}/api/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-Selected-Model": model,
-      "X-API-Key": apiKey,
+      ...(apiKey ? { "X-API-Key": apiKey } : {}),
     },
     body: JSON.stringify(body),
   });
 
-  // explicitly stream response (fixes ERR DECODING CONTENT)
+  // stream back as-is (fixes ERR_DECODING_CONTENT / keeps SSE style)
   return new Response(response.body, {
     status: response.status,
     headers: {
-      "Content-Type": response.headers.get("Content-Type") || "application/json",
+      "Content-Type":
+        response.headers.get("Content-Type") || "application/json",
       "Cache-Control": response.headers.get("Cache-Control") || "no-cache",
     },
   });

@@ -1,4 +1,3 @@
-
 export type ModelOptions =
   | "ollama/deepseek-r1:32b"
   | "ollama/deepseek-r1:8b"
@@ -18,4 +17,12 @@ export type ModelOptions =
   | "anthropic/claude-3-5-haiku-latest"
   | "anthropic/claude-opus-4-20250514"
   | "google_genai/gemini-2.5-pro"
-  | "google_genai/gemini-2.5-flash";
+  | "google_genai/gemini-2.5-flash"
+  // ⬇️ NEU: erlaubt beliebige LM-Studio IDs wie "lmstudio/meta-llama-3.1-8b-instruct"
+  | `lmstudio/${string}`;
+
+export const isLmStudio = (m: string): m is `lmstudio/${string}` =>
+  m.startsWith("lmstudio/");
+
+export const lmStudioModelId = (m: `lmstudio/${string}`) =>
+  m.slice("lmstudio/".length);

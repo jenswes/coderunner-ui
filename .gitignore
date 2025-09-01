@@ -42,4 +42,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/public/assets/*
+/public/assets/*.env.local
