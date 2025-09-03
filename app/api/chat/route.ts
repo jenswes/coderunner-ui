@@ -6,7 +6,9 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOllama } from "ollama-ai-provider";
 
 import { frontendTools } from "@assistant-ui/react-ai-sdk";
-import { streamText } from "ai";
+import { streamText, tool } from "ai";
+import { z } from "zod";
+
 import { experimental_createMCPClient as createMCPClient } from "ai";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp";
 import { Experimental_StdioMCPTransport } from "ai/mcp-stdio";
@@ -15,26 +17,19 @@ import { join } from "path";
 import os from "os";
 
 export const runtime = "nodejs";
-// export const runtime = "edge";
 export const maxDuration = 30;
 
 /* ----------------------------- MCP helpers ----------------------------- */
 
 function resolveFilesystemCmd(): string {
-  // 1) explicit env
   if (process.env.MCP_FILESYSTEM_CMD) return process.env.MCP_FILESYSTEM_CMD;
 
-  // 2) common fallbacks:
-  //    - Go build like mark3labs/mcp-filesystem-server
   const goBin = `${process.env.HOME || os.homedir()}/go/bin/mcp-filesystem-server`;
-
-  //    - Node package @modelcontextprotocol/server-filesystem
   const nodeBin =
     process.platform === "win32"
       ? join(process.cwd(), "node_modules/.bin/mcp-filesystem.cmd")
       : join(process.cwd(), "node_modules/.bin/mcp-filesystem");
 
-  // choose first candidate; if it doesn't exist, spawn will fail and we handle it upstream
   return process.env.MCP_PREFER_NODE_BIN === "1" ? nodeBin : goBin;
 }
 
@@ -43,9 +38,7 @@ async function getFilesystemMcpTools() {
     const transport = new Experimental_StdioMCPTransport({
       command: resolveFilesystemCmd(),
       args: [
-        // directory for public assets (frontend project)
         process.env.MCP_FS_ASSETS_DIR || join(process.cwd(), "public/assets"),
-        // additional host assets directory that maps into the container
         join(os.homedir(), ".coderunner/assets"),
       ],
     });
@@ -78,23 +71,134 @@ async function getCoderunnerMcpTools() {
   }
 }
 
+async function getStdioMcpToolsFromCmd(
+  name: string,
+  cmdEnv: string,
+  argsEnv: string,
+  defaultCmd: string,
+  defaultArgs: string
+) {
+  try {
+    const command = process.env[cmdEnv] || defaultCmd;
+    const args = (process.env[argsEnv] || defaultArgs).split(" ");
+    const transport = new Experimental_StdioMCPTransport({ command, args });
+    const client = await createMCPClient({ transport });
+    console.log(`[MCP] ${name} connected:`, command, args.join(" "));
+    return await client.tools();
+  } catch (err) {
+    console.warn(`[MCP] ${name} disabled:`, err);
+    return {};
+  }
+}
+
+async function getShellExecMcpTools() {
+  if (process.env.MCP_SHELL_DISABLE === "1") return {};
+  return getStdioMcpToolsFromCmd(
+    "shell-exec",
+    "MCP_SHELL_CMD",
+    "MCP_SHELL_ARGS",
+    "node",
+    "mcp/mcp-shell-exec.mjs"
+  );
+}
+
+async function getWebSnapMcpTools() {
+  if (process.env.MCP_WEB_SNAP_DISABLE === "1") return {};
+  return getStdioMcpToolsFromCmd(
+    "web-snap",
+    "MCP_WEB_SNAP_CMD",
+    "MCP_WEB_SNAP_ARGS",
+    "node",
+    "mcp/mcp-web-snap.mjs"
+  );
+}
+
+/* ----------------------- Terminal (PTY) helper tools -------------------- */
+
+function getTerminalTools() {
+  // Send raw keystrokes/text to the actual terminal window.
+  const INPUT_URL =
+    process.env.PTY_INPUT_URL ||
+    process.env.PTY_FEED_URL || // legacy fallback
+    "http://localhost:3030/input";
+
+  const writeTool = tool({
+    description:
+      "Type raw text/keystrokes into the real terminal (PTY). Include '\\n' for Enter. Example: 'htop\\n' or 'q'.",
+    parameters: z.object({
+      text: z.string().describe("What to type (remember \\n for Enter)."),
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    execute: async ({ text }: any) => {
+      try {
+        const r = await fetch(INPUT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: text }),
+        });
+        if (!r.ok) return `terminal.write failed ${r.status}: ${await r.text()}`;
+        return "ok";
+      } catch (e: any) {
+        return `terminal.write error: ${e?.message || String(e)}`;
+      }
+    },
+  });
+
+  const runInteractiveTool = tool({
+    description:
+      "Run an interactive command in the real terminal, wait, then send a quit sequence. Perfect for: 'run htop for 5 seconds and quit'.",
+    parameters: z.object({
+      command: z.string().describe("The command to run, e.g. 'htop' or 'top -d 1'"),
+      durationMs: z.number().int().positive().max(120000).describe("How long to keep it open."),
+      quitSequence: z
+        .string()
+        .default("q")
+        .describe("Keys to quit (default: 'q'). Use '\\x03' for Ctrl-C, add '\\n' if the program needs Enter."),
+      sendEnterAfterCommand: z
+        .boolean()
+        .default(true)
+        .describe("Append a trailing newline after the command (default true)."),
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    execute: async ({ command, durationMs, quitSequence, sendEnterAfterCommand }: any) => {
+      const send = async (data: string) => {
+        await fetch(INPUT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data }),
+        });
+      };
+      try {
+        await send(command + (sendEnterAfterCommand ? "\n" : ""));
+        await new Promise((r) => setTimeout(r, durationMs));
+        await send(quitSequence);
+        return `Ran '${command}' for ${durationMs}ms and sent quit sequence.`;
+      } catch (e: any) {
+        return `terminal.runInteractive error: ${e?.message || String(e)}`;
+      }
+    },
+  });
+
+  return {
+    "terminal.write": writeTool,
+    "terminal.runInteractive": runInteractiveTool,
+  } as const;
+}
+
 /* ------------------------- Model provider switch ------------------------ */
 
 function selectModelProvider(model: string, apiKey: string) {
-  // LM Studio via OpenAI-compatible API
   if (model.startsWith("lmstudio/")) {
     const baseURL =
       process.env.LMS_API_BASE ||
       process.env.NEXT_PUBLIC_LMS_API_BASE ||
       "http://localhost:1234/v1";
     const key = apiKey || process.env.LMS_API_KEY || "lmstudio";
-
     const lmstudio = createOpenAI({ apiKey: key, baseURL });
-    const bareModel = model.slice("lmstudio/".length); // e.g. "mistralai/mistral-small-3.2"
+    const bareModel = model.slice("lmstudio/".length);
     return lmstudio(bareModel);
   }
 
-  // existing providers
   switch (model) {
     case "ollama/deepseek-r1:32b": {
       const p = createOllama({});
@@ -186,31 +290,27 @@ function selectModelProvider(model: string, apiKey: string) {
 
 export async function POST(req: Request) {
   const { messages, system, tools } = await req.json();
-
-  // headers
   const apiKey = req.headers.get("X-API-Key") || "";
 
- const cookieStore = await cookies();
+  const cookieStore = await cookies();
   const cookieModel = cookieStore.get("selectedModel")?.value || "";
-const model =
-  req.headers.get("X-Selected-Model") ||
-  cookieModel ||
-  process.env.DEFAULT_SELECTED_MODEL ||
-  "google_genai/gemini-2.5-flash";
-  
-  // permit no api key for ollama/* and lmstudio/*
-  if (
-    !apiKey &&
-    !model.startsWith("ollama/") &&
-    !model.startsWith("lmstudio/")
-  ) {
+
+  const model =
+    req.headers.get("X-Selected-Model") ||
+    cookieModel ||
+    process.env.DEFAULT_SELECTED_MODEL ||
+    "google_genai/gemini-2.5-flash";
+
+  if (!apiKey && !model.startsWith("ollama/") && !model.startsWith("lmstudio/")) {
     return new Response("Missing API-Key", { status: 400 });
   }
 
-  // init MCP tools per request (robust, no top-level await)
-  const [fsTools, crTools] = await Promise.all([
+  // MCP tools (fault-tolerant)
+  const [fsTools, crTools, shellTools, webTools] = await Promise.all([
     getFilesystemMcpTools(),
     getCoderunnerMcpTools(),
+    getShellExecMcpTools(),
+    getWebSnapMcpTools(),
   ]);
 
   const selectedModel = selectModelProvider(model, apiKey);
@@ -225,6 +325,9 @@ const model =
       ...frontendTools(tools),
       ...fsTools,
       ...crTools,
+      ...shellTools,
+      ...webTools,
+      ...getTerminalTools(), // <- PTY tools available to the model
     },
     onError: console.error,
   });

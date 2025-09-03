@@ -81,8 +81,10 @@
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.967 0.001 286.375);
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
+
+  /* filled at runtime by ModelSelectorPortal */
+  --chat-header-height: 0px;
+  --chat-composer-height: 0px;
 }
 
 .dark {
@@ -104,31 +106,15 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
+/* ==== Base =========================================================== */
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
 }
 
-
+/* ==== Badges ========================================================= */
 @keyframes fade-in-out {
   0%   { opacity: 0; transform: translateY(5px); }
   10%  { opacity: 1; transform: translateY(0); }
@@ -139,3 +125,83 @@
   display: inline-block;
   animation: fade-in-out 1.5s forwards;
 }
+
+/* === Chat viewport sizing ============================================ */
+/* NUR der Chatbereich belegt die gesamte sichtbare Höhe, unabhängig vom Layout außenrum. */
+.chat-viewport {
+  height: 100svh;                         /* volle Fensterhöhe */
+  box-sizing: border-box;                 /* Padding zählt zur Höhe */
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+
+  /* Header & Composer werden als Paddings kompensiert,
+     damit nichts überlappt oder abgeschnitten wird. */
+  padding-top: var(--chat-header-height, 0px);
+  padding-bottom: var(--chat-composer-height, 0px);
+
+  /* Scrollziel landet nicht unter dem Composer */
+  scroll-padding-top: calc(var(--chat-header-height, 0px) + 8px);
+  scroll-padding-bottom: calc(var(--chat-composer-height, 0px) + 12px);
+}
+
+/* Kinder dürfen schrumpfen */
+.chat-viewport > * { min-height: 0; }
+
+/* Composer ganz oben in der Stapelreihenfolge + full width */
+.chat-viewport .sticky.bottom-0 {
+  left: 0;
+  right: 0;
+  width: 100% !important;
+  max-width: none !important; /* überschreibt max-w-[var(--thread-max-width)] */
+  z-index: 9999 !important;
+}
+.chat-viewport .sticky.bottom-0 > form {
+  width: 100% !important;
+}
+
+/* Neutralisiere „Full-Window“-Utilities nur innerhalb des Viewports */
+.chat-viewport [class~="h-screen"],
+.chat-viewport [class*="h-[100vh]"],
+.chat-viewport [class*="h-[100svh]"] { height: 100% !important; }
+
+.chat-viewport [class~="min-h-screen"],
+.chat-viewport [class*="min-h-[100vh]"],
+.chat-viewport [class*="min-h-[100svh]"] { min-height: 0 !important; }
+
+.chat-viewport [class~="h-full"] { height: 100% !important; }
+
+/* Assistant-UI: flex/scroll Hooks */
+.chat-viewport [data-aui-root] {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+.chat-viewport [data-aui-scroll-region] {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+}
+
+/* === Full-width overrides ============================================ */
+.full-width-assistant { width: 100%; }
+.full-width-assistant, .full-width-assistant * { max-width: none !important; }
+.full-width-assistant .container,
+.full-width-assistant [class*="container"],
+.full-width-assistant .mx-auto,
+.full-width-assistant [class*="mx-auto"] {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: 100% !important;
+}
+.full-width-assistant .prose { max-width: 100% !important; }
+.full-width-assistant img,
+.full-width-assistant video,
+.full-width-assistant canvas,
+.full-width-assistant svg {
+  height: auto; max-width: 100%;
+}
+
+html, body { height: 100%; }

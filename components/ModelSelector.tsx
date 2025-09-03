@@ -14,7 +14,7 @@ export default function ModelSelector() {
   const [loadingList, setLoadingList] = React.useState(false);
   const [checking, setChecking] = React.useState(false);
 
-  // Modelle laden (Server ruft LM Studio REST auf)
+  // Modelle laden
   React.useEffect(() => {
     let alive = true;
     (async () => {
@@ -25,7 +25,6 @@ export default function ModelSelector() {
         if (!alive) return;
         const opts: Opt[] = j.options || [];
         setOptions(opts);
-        // Cookie lesen
         const saved = getCookie("selectedModel");
         const initial = saved || opts[0]?.value || "";
         setValue(initial);
@@ -40,7 +39,7 @@ export default function ModelSelector() {
     };
   }, []);
 
-  // Status für das gewählte Modell pollen
+  // Status pollen
   React.useEffect(() => {
     let alive = true;
     if (!value) return;
@@ -62,7 +61,7 @@ export default function ModelSelector() {
     }
 
     checkOnce();
-    const t = setInterval(checkOnce, 5000); // alle 5s
+    const t = setInterval(checkOnce, 5000);
     return () => {
       alive = false;
       clearInterval(t);
@@ -71,11 +70,10 @@ export default function ModelSelector() {
 
   function onChange(v: string) {
     setValue(v);
-    // 1 Jahr gültig, site-wide
     document.cookie = `selectedModel=${encodeURIComponent(
       v
     )}; path=/; max-age=31536000`;
-    // sofort Status neu abfragen
+    // sofort Status neu antriggern
     setTimeout(() => {
       void fetch(`/api/model-state?id=${encodeURIComponent(v)}`);
     }, 0);
@@ -83,6 +81,9 @@ export default function ModelSelector() {
 
   const pillColor =
     state === "loaded" ? "bg-emerald-500" : state === "not-loaded" ? "bg-amber-500" : "bg-neutral-400";
+
+  // Fixe Breite für Status-Pill, damit der Header nicht „zappelt“
+  const statusLabel = checking ? "checking…" : state;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -104,10 +105,16 @@ export default function ModelSelector() {
           ))}
       </select>
 
-      <span className={`inline-flex items-center gap-2 px-2 py-1 text-white text-xs rounded-full ${pillColor}`}>
-        {checking ? "checking…" : state}
+      {/* Fixed-size status pill */}
+      <span
+        className={`inline-flex items-center justify-center px-2 py-1 text-white text-xs rounded-full ${pillColor}`}
+        // „not-loaded“ & „checking…“ sind die längsten -> ~100px passt gut in Standardfont
+        style={{ width: 100 }}
+      >
+        {statusLabel}
       </span>
 
+      {/* Fixed width refresh button to avoid layout shifts */}
       <button
         type="button"
         onClick={async () => {
@@ -121,10 +128,10 @@ export default function ModelSelector() {
             setLoadingList(false);
           }
         }}
-        className="px-2 py-1 border rounded text-sm"
+        className="px-3 py-1 border rounded text-sm w-[88px]"
         title="Refresh model list"
       >
-        Refresh
+        {loadingList ? "Refreshing" : "Refresh"}
       </button>
 
       <code className="opacity-60 text-xs">{value}</code>
@@ -136,4 +143,3 @@ function getCookie(name: string): string | null {
   const m = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
   return m ? decodeURIComponent(m[2]) : null;
 }
-
